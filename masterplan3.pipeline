@@ -1,0 +1,65 @@
+<!-- 02/06/2018 Starting with the skeleton.pipeline sample and adding audio recording and separate (webcam) video recording. Data is saved in sample_data subfolder. We could also try getting video from the Kinect if desired. -->
+
+<?xml version="1.0" ?>
+<pipeline ssi-v="1">
+
+	<!-- Loading . . .	 -->
+	<register>
+		<load name="ssimicrosoftkinect2"/>
+		<load name="ssigraphic" />
+		<load name="ssiioput" />
+		<load name="ssiskeleton" />
+		<load name="ssiaudio" />
+		<load name="ssicamera" />
+	</register>
+
+	<!-- Create sensors, e.g. Kinect and built-in laptop microphone -->
+	<sensor create="MicrosoftKinect2" sr="15.0" trackNearestPersons="6" showFaceTracking="true" showBodyTracking="true">
+		<output channel="skeleton" pin="skel"/>
+	</sensor>
+	<sensor create="Audio" option="audio" scale="true" blockInSamples="512">
+		<output channel="audio" pin="audio"/>
+	</sensor>
+	<sensor create="Camera" option="camera">
+		<output channel="video" pin="video" size="2.0s"/>
+	</sensor>
+
+	<!-- Transformers. Takes input directly from input and does something with it. Transforms sensor data into some format. -->
+	<transformer create="SkeletonConverter:skelconvert">
+		<input pin="skel" frame="1"/>
+		<output pin="skelconv"/>
+	</transformer>
+	<transformer create="SkeletonPainter:skelpaint">
+		<input pin="skelconv" frame="1"/>
+		<output pin="skelpaint"/>
+	</transformer> 
+
+	<!-- Consumers. Takes some created data and does something with it. (Optional) create a plot for us to see the data as it is recorded -->
+	<consumer create="VideoPainter:plot" title="SKELETON" flip="false">
+		<input pin="skelpaint" frame="1"/>
+	</consumer>
+	<consumer create="SignalPainter:plot" title="audio" size="10" type="2">
+		<input pin="audio" frame="0.02s"/>
+	</consumer>
+	<consumer create="VideoPainter:plot" title="camera">
+		<input pin="video" frame="1" delta="0"/>
+	</consumer>
+
+	<consumer create="FileWriter" path="sample_data\MicrosoftKinect2skeleton">
+		<input pin="skel" frame="1"/>		
+	</consumer>
+	<consumer create="WavWriter" path="sample_data\audio.wav">
+		<input pin="audio" frame="512"/>		
+	</consumer>
+	<consumer create="CameraWriter" option="camerawriter" path="sample_data\camera">
+		<input pin="video" frame="1" delta="0"/>
+	</consumer>	
+
+	<!-- Decoration. Making the plot appear on screen (otherwise we'd just see the terminal window. probably.)-->
+	<object create="Decorator" icon="true" title="Pipeline">
+		<area pos="0,0,400,600">console</area>
+		<area pos="400,0,400,600">plot*</area>
+		<area pos="800,0,400,600">monitor*</area>
+	</object>
+
+</pipeline>
