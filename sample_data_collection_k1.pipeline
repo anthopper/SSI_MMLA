@@ -1,0 +1,123 @@
+<!-- 
+    02/06/2018 Emily and Kit: Starting with the skeleton.pipeline sample and adding audio recording and separate (webcam) video recording. Data is saved in sample_data subfolder. We could also try getting video from the Kinect if desired. 
+
+    02/09/2018 Emily: Adding screen capture recording based on the camera_screen.pipeline example. Also, adapting this code to use the Kinect 1 instead of Kinect 2 sensor. 
+-->
+
+<?xml version="1.0" ?>
+<pipeline ssi-v="1">
+
+    <!-- Loading...  -->
+    <register>
+        <load name="ssimicrosoftkinect"/>
+        <load name="ssigraphic" />
+        <load name="ssiioput" />
+        <load name="ssiskeleton" />
+        <load name="ssiaudio" />
+        <load name="ssicamera" />
+
+    </register>
+
+    <!-- Create sensors-->
+
+    <!-- 
+    kinect sensor 
+    - turn on trackNearestPerson to always track the nearest person
+    - turn on seatedSkeletonMode if tracked person is seating
+    - turn off showFaceTracking and showBodyTracking to NOT visulaize tracking results in the rgb image
+    -->
+    <sensor create="MicrosoftKinect" 
+            trackNearestPerson="true" 
+            seatedSkeletonMode="true" 
+            simpleFaceTracking="false" 
+            showFaceTracking="false" 
+            showBodyTracking="false" 
+            nearTrackingMode="true">
+        <output channel="rgb" pin="rgb"/>
+        <output channel="depthr" pin="depth"/>
+        <output channel="au" pin="au"/>
+        <output channel="head" pin="head"/>
+        <output channel="skeleton" pin="skel"/>
+        <output channel="face" pin="face"/>
+    </sensor>
+
+    <!-- laptop microphone -->
+    <sensor create="Audio" 
+            option="audio" 
+            scale="true" 
+            blockInSamples="512">
+        <output channel="audio" pin="audio"/>
+    </sensor>
+
+    <!-- laptop front-facing camera (could also use an external webcam)-->
+    <sensor create="Camera" 
+            option="camera">
+        <output channel="video" pin="video" size="2.0s"/>
+    </sensor>
+
+    <!-- laptop screen capture -->
+    <sensor create="CameraScreen" 
+            resize="true" 
+            resize_width="640" 
+            resize_height="480" 
+            full="true">
+        <output channel="video" pin="camera" size="2.0s"/>
+    </sensor>
+
+    <!-- Transformers (prepare visualizations) -->
+    <transformer create="SkeletonConverter:skelconvert">
+        <input pin="skel" frame="1"/>
+        <output pin="skelconv"/>
+    </transformer>
+    <transformer create="SkeletonPainter:skelpaint">
+        <input pin="skelconv" frame="1"/>
+        <output pin="skelpaint"/>
+    </transformer> 
+    <transformer create="MicrosoftKinectPainter">   
+        <input pin="rgb" frame="1"/>
+        <xinput size="2">
+            <input pin="skel"/>
+            <input pin="face"/>
+        </xinput>
+        <output pin="rgb_skelface"/>
+    </transformer>  
+
+    <!-- Consumers (display visualizations) -->
+    <consumer create="SignalPainter:plot" title="Microphone" size="10" type="2">
+        <input pin="audio" frame="0.02s"/>
+    </consumer>
+    <consumer create="VideoPainter:plot" flip="False" title="Webcam">
+        <input pin="video" frame="1" delta="0"/>
+    </consumer>
+    <consumer create="VideoPainter:plot" flip="False" mirror="False" title="Kinect RGB with skeleton">
+        <input pin="rgb_skelface" frame="1"/>
+    </consumer> 
+
+    <!-- Consumers (save data) -->
+    <consumer create="FileWriter" 
+              path="sample_data\kinectSkeleton">
+        <input pin="skel" frame="1"/>       
+    </consumer>
+    <consumer create="WavWriter" 
+              path="sample_data\audio.wav">
+        <input pin="audio" frame="512"/>        
+    </consumer>
+    <consumer create="CameraWriter" 
+              option="camerawriter" 
+              path="sample_data\webcam.avi">
+        <input pin="video" frame="1" delta="0"/>
+    </consumer> 
+    <consumer create="CameraWriter" 
+              option="camscreenwriter" 
+              path="sample_data\screenCapture.avi">
+        <input pin="camera" frame="1" delta="0"/>
+    </consumer> 
+    
+    <!-- Decorator (show the plots on screen in addition to terminal window)-->
+    <object create="Decorator" icon="true" title="Pipeline">
+        <area pos="0,0,400,600">console</area>
+        <area pos="400,0,400,600">plot*</area>
+        <area pos="800,0,400,600">monitor*</area>
+    </object>
+
+</pipeline>
