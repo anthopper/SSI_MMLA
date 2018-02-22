@@ -2,6 +2,8 @@
     02/06/2018 Emily and Kit: Starting with the skeleton.pipeline sample and adding audio recording and separate (webcam) video recording. Data is saved in sample_data subfolder. We could also try getting video from the Kinect if desired. 
 
     02/09/2018 Emily: Adding screen capture recording based on the camera_screen.pipeline example. Also, adapting this code to use the Kinect 1 instead of Kinect 2 sensor. 
+
+    02/10/2018 Emily: Changed dimensions in decorator section so the windows for plots/videos are not smooshed. Set trackNearestPerson to false so multiple people could be detected at a time by the Kinect.
 -->
 
 <?xml version="1.0" ?>
@@ -27,7 +29,7 @@
     - turn off showFaceTracking and showBodyTracking to NOT visulaize tracking results in the rgb image
     -->
     <sensor create="MicrosoftKinect" 
-            trackNearestPerson="true" 
+            trackNearestPerson="false" 
             seatedSkeletonMode="true" 
             simpleFaceTracking="false" 
             showFaceTracking="false" 
@@ -95,29 +97,29 @@
 
     <!-- Consumers (save data) -->
     <consumer create="FileWriter" 
-              path="sample_data\kinectSkeleton">
+              path="sample_data_km\kinectSkeleton">
         <input pin="skel" frame="1"/>       
     </consumer>
     <consumer create="WavWriter" 
-              path="sample_data\audio.wav">
+              path="sample_data_km\audio.wav">
         <input pin="audio" frame="512"/>        
     </consumer>
     <consumer create="CameraWriter" 
               option="camerawriter" 
-              path="sample_data\webcam.avi">
+              path="sample_data_km\webcam.avi">
         <input pin="video" frame="1" delta="0"/>
     </consumer> 
     <consumer create="CameraWriter" 
               option="camscreenwriter" 
-              path="sample_data\screenCapture.avi">
+              path="sample_data_km\screenCapture.avi">
         <input pin="camera" frame="1" delta="0"/>
     </consumer> 
     
     <!-- Decorator (show the plots on screen in addition to terminal window)-->
     <object create="Decorator" icon="true" title="Pipeline">
-        <area pos="0,0,400,600">console</area>
-        <area pos="400,0,400,600">plot*</area>
-        <area pos="800,0,400,600">monitor*</area>
+        <area pos="0,0,800,600">console</area>
+        <area pos="400,0,800,600">plot*</area>
+        <area pos="800,0,800,600">monitor*</area>
     </object>
 
 </pipeline>
