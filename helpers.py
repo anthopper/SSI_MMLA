@@ -68,17 +68,16 @@ def create_xyz_df(df):
     for c in df.columns.values:
         if ('POS_X' in c) or ('POS_Y' in c) or ('POS_Z' in c):
             xyz_cols.append(c)
-    return df[xyz_cols]
+    return df.loc[:,:][xyz_cols].copy()
 
 # Plotting a point cloud for a specific row of Kinect data
 def xyz_triples(r):
-    # r is a 120-dimension vector 
-    # (i.e. a row in kinect_xyz_df, 
+    # r is a row in kinect_xyz_df, 
     # which just has X_POS, Y_POS, and Z_POS values for each tracked joint)
     
     # getting XYZ triples from r
     points = []
-    for i in range(0, 120, 3):
+    for i in range(0, r.shape[0], 3):
         points.append([r[i], r[i+1], r[i+2]])                 
     return pd.DataFrame(points, columns=['X_POS', 'Y_POS', 'Z_POS'])
 
@@ -96,3 +95,40 @@ def plot_xyz_triples(r_points_df, title=''):
     ax.set_title(title)
     plt.show()
     return
+
+def draw_line(ax, a, b):    
+    x = np.linspace(a[0], b[0], 100)
+    y = np.linspace(a[1], b[1], 100)
+    z = np.linspace(a[2], b[2], 100)
+    ax.plot(x, y, z)
+
+def drop_lower_parts(df):
+    UPPER_PARTS = ['SHOULDER', 'HEAD', 'ELBOW', 'WRIST', 'HAND'] 
+    UPPER_PARTS_COLS = []
+    for c in df.columns.values.tolist():
+        for part in UPPER_PARTS:
+            if ('POS' in c) and (part in c) and ('CONF' not in c):
+                UPPER_PARTS_COLS.append(c)
+    return df.loc[:,:][UPPER_PARTS_COLS].copy()
+
+JOINT_PAIRS = [
+                ['WRIST_LEFT', 'HAND_LEFT'],
+                ['WRIST_LEFT', 'ELBOW_LEFT'],
+                ['ELBOW_LEFT', 'SHOULDER_LEFT'],
+                ['SHOULDER_LEFT', 'SHOULDER_CENTER'],
+                ['SHOULDER_CENTER', 'SHOULDER_RIGHT'],
+                ['ELBOW_RIGHT', 'SHOULDER_RIGHT'],
+                ['WRIST_RIGHT', 'ELBOW_RIGHT'],
+                ['WRIST_RIGHT', 'HAND_RIGHT'],
+                ['SHOULDER_CENTER', 'HEAD'],
+              ]
+
+def plot_skeleton(ax, row):
+    # expecting row to be from a dataframe with UPPER_PARTS_COLS values
+    
+    for person in ['P1', 'P2']:
+        for jp in JOINT_PAIRS:
+            draw_line(ax, [row[jp[0]+'_POS_X_'+person], row[jp[0]+'_POS_Z_'+person], row[jp[0]+'_POS_Y_'+person]], 
+                          [row[jp[1]+'_POS_X_'+person], row[jp[1]+'_POS_Z_'+person], row[jp[1]+'_POS_Y_'+person]])
+                
+    return 
