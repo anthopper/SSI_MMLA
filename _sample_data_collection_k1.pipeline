@@ -4,6 +4,8 @@
     02/09/2018 Emily: Adding screen capture recording based on the camera_screen.pipeline example. Also, adapting this code to use the Kinect 1 instead of Kinect 2 sensor. 
 
     02/10/2018 Emily: Changed dimensions in decorator section so the windows for plots/videos are not smooshed. Set trackNearestPerson to false so multiple people could be detected at a time by the Kinect.
+
+    04/12/2018 Emily and Kit and Connor: trying to also save the Kinect video overlay...
 -->
 
 <?xml version="1.0" ?>
@@ -42,6 +44,10 @@
         <output channel="skeleton" pin="skel"/>
         <output channel="face" pin="face"/>
     </sensor>
+
+    <consumer create="VideoPainter:plot" flip="False" mirror="False" title="rgb">
+        <input pin="rgb" frame="1"/>
+    </consumer> 
 
     <!-- laptop microphone -->
     <sensor create="Audio" 
@@ -95,26 +101,30 @@
         <input pin="rgb_skelface" frame="1"/>
     </consumer> 
 
-    <!-- Consumers (save data) -->
+    <!-- Consumers for different types of writers (save data) -->
     <consumer create="FileWriter" 
-              path="sample_data_km\kinectSkeleton">
+              path="sample_data\kinectSkeleton">
         <input pin="skel" frame="1"/>       
+    </consumer>>
+    <consumer create="CameraWriter" 
+              path="sample_data\kinectRGBSkelface.avi">
+        <input pin="rgb_skelface" frame="1"/>       
     </consumer>
     <consumer create="WavWriter" 
-              path="sample_data_km\audio.wav">
+              path="sample_data\audio.wav">
         <input pin="audio" frame="512"/>        
     </consumer>
     <consumer create="CameraWriter" 
               option="camerawriter" 
-              path="sample_data_km\webcam.avi">
+              path="sample_data\webcam.avi">
         <input pin="video" frame="1" delta="0"/>
     </consumer> 
-    <consumer create="CameraWriter" 
+    <!-- <consumer create="CameraWriter" 
               option="camscreenwriter" 
-              path="sample_data_km\screenCapture.avi">
+              path="sample_data\screenCapture.avi">
         <input pin="camera" frame="1" delta="0"/>
     </consumer> 
-    
+     -->
     <!-- Decorator (show the plots on screen in addition to terminal window)-->
     <object create="Decorator" icon="true" title="Pipeline">
         <area pos="0,0,800,600">console</area>
