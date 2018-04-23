@@ -132,3 +132,20 @@ def plot_skeleton(ax, row):
                           [row[jp[1]+'_POS_X_'+person], row[jp[1]+'_POS_Z_'+person], row[jp[1]+'_POS_Y_'+person]])
                 
     return 
+
+def readable_timestamp(df, timestamp_col_name='Timestamp'):
+    # converting Timestamp in milliseconds (for analysis) 
+    # to a MM:SS format (for readability and revisiting transcripts afterwards)
+
+    timestamp = df.loc[:, 'Timestamp'].copy()
+    timestamp_min = np.floor(timestamp/1000/60)
+    timestamp_sec = (timestamp - timestamp_min*1000*60)/1000
+    readable_timestamp = []
+
+    for i in range(len(timestamp)):
+        m = "%02d" % timestamp_min[i]
+        s = "%02d" % timestamp_sec[i]
+        readable_timestamp.append(m + ":" + s)
+
+    df.loc[:, 'Readable Timestamp'] = readable_timestamp
+    return df.loc[:, :].copy()
